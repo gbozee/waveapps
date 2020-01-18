@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Top-level package for quick books."""
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 from waveapps.app import WaveAPI, request_helper
 from waveapps.business import WaveBusiness, TransactionAccounts, WaveException

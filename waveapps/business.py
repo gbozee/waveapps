@@ -16,6 +16,9 @@ class TransactionAccounts:
         self.to = to
         self.charges = charges
 
+    def __eq__(self, b):
+        return self._from == b._from and self.to == b.to and self.charges == b.charges
+
 
 def build_query_class_helper(
     class_fields: typing.Dict[str, type],

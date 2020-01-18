@@ -4,7 +4,7 @@ import httpx
 import pytest
 
 from waveapps import models
-from waveapps.business import WaveBusiness
+from waveapps.business import TransactionAccounts, WaveBusiness
 
 
 @pytest.fixture
@@ -14,7 +14,9 @@ def create_and_test_transaction(app: httpx.Client):
         assert response.status_code == 200
         assert response.json() == {
             "status": True,
-            "msg": "creating transaction. listen to http://the-main-site.com/hooks to update",
+            "data": {
+                "msg": "creating transaction. listen to http://the-main-site.com/hooks to update"
+            },
         }
 
     return _create_transaction
@@ -23,9 +25,11 @@ def create_and_test_transaction(app: httpx.Client):
 @pytest.mark.asyncio
 async def test_create_transaction(create_and_test_transaction, mocker, create_future):
     mocked = mocker.patch(
-        "waveapps.frameworks.starlette.WaveBusiness.create_transaction"
+        "waveapps.frameworks.starlette.service_layer.WaveBusiness.create_transaction"
     )
-    mocked_http = mocker.patch("waveapps.frameworks.starlette.request_helper")
+    mocked_http = mocker.patch(
+        "waveapps.frameworks.starlette.service_layer.request_helper"
+    )
     mocked_http.return_value = create_future(None)
     mocked.return_value = create_future(
         models.MoneyTransactionCreateOutput(transaction={"id": 23})
@@ -52,11 +56,9 @@ async def test_create_transaction(create_and_test_transaction, mocker, create_fu
         kind=models.MoneyFlow.OUTFLOW,
         amount=20000,
         currency=models.CurrencyCode.USD,
-        accounts={
-            "from": "AccountFrom",
-            "to": "AccountTo",
-            "charges": "AccountCharges",
-        },
+        accounts=TransactionAccounts(
+            **{"from": "AccountFrom", "to": "AccountTo", "charges": "AccountCharges"}
+        ),
     )
     mocked_http.assert_called_with(
         "http://the-main-site.com/hooks",
@@ -93,11 +95,9 @@ async def test_create_transaction(create_and_test_transaction, mocker, create_fu
         kind=models.MoneyFlow.INFlOW,
         amount=20000,
         currency=models.CurrencyCode.NGN,
-        accounts={
-            "from": "AccountFrom",
-            "to": "AccountTo",
-            "charges": "AccountCharges",
-        },
+        accounts=TransactionAccounts(
+            **{"from": "AccountFrom", "to": "AccountTo", "charges": "AccountCharges"}
+        ),
         additional_line_item=[
             {
                 "accountId": "AccountCharges",
@@ -135,11 +135,9 @@ async def test_create_transaction(create_and_test_transaction, mocker, create_fu
         kind=models.MoneyFlow.INFlOW,
         amount=20000,
         currency=models.CurrencyCode.NGN,
-        accounts={
-            "from": "AccountFrom",
-            "to": "AccountTo",
-            "charges": "AccountCharges",
-        },
+        accounts=TransactionAccounts(
+            **{"from": "AccountFrom", "to": "AccountTo", "charges": "AccountCharges"}
+        ),
         charge_amount=400,
         charge_description="Service Fee",
     )
